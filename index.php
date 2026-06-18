@@ -27,11 +27,15 @@ include 'includes/header.php';
         
         <aside class="auth-box" style="width: 100%; max-width: none; margin: 0; border: 1.5px solid var(--link-blue); padding: 30px;">
             <h2 style="font-size: 22px; margin-bottom: 20px;">Profile</h2>
+
             <div class="profile-pic-wrapper" style="width: 130px; height: 130px; margin: 0 auto 15px; border-radius: 50%; border: 3px solid var(--link-blue); overflow: hidden; background: #eee;">
-                <img src="<?php echo !empty($user_data['profile_pic']) ? $user_data['profile_pic'] : 'uploads/profiles/default.png'; ?>" 
+                <img src="<?php echo !empty($user_data['profile_pic']) ? htmlspecialchars($user_data['profile_pic']) : 'uploads/profiles/default.png'; ?>" 
                      alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
-            <h3 style="font-weight: 800; margin-bottom: 25px;"><?php echo htmlspecialchars($user_data['full_name']); ?></h3>
+
+            <h3 style="font-weight: 800; margin-bottom: 25px;">
+                <?php echo htmlspecialchars($user_data['full_name']); ?>
+            </h3>
             
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <a href="profile.php" class="btn-primary" style="text-decoration: none; display: block; padding: 12px;">Profile</a>
@@ -41,19 +45,23 @@ include 'includes/header.php';
 
         <section class="auth-box" style="width: 100%; max-width: none; margin: 0; border: 1.5px solid var(--link-blue); padding: 30px;">
             <h2 style="font-size: 22px; margin-bottom: 25px;">News</h2>
+
             <form id="news-form" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>Header</label>
                     <input type="text" name="news_title" required>
                 </div>
+
                 <div class="form-group">
                     <label>Text</label>
                     <textarea name="news_content" rows="4" style="resize: none;" required></textarea>
                 </div>
+
                 <div class="form-group">
                     <label>Apply photo</label>
                     <input type="file" name="news_image" accept="image/*">
                 </div>
+
                 <button type="submit" class="btn-primary">Publish</button>
             </form>
         </section>
@@ -67,18 +75,26 @@ include 'includes/header.php';
         <div class="news-track" id="news-track">
             <?php
             $news = $conn->query("SELECT * FROM news ORDER BY created_at DESC");
+
             while($n = $news->fetch_assoc()):
             ?>
                 <div class="news-card" style="position: relative;">
                     
                     <?php if(isset($user_data['role']) && $user_data['role'] === 'admin'): ?>
-                        <button class="delete-news-btn" data-id="<?php echo $n['news_id']; ?>" style="position: absolute; top: 10px; right: 10px; background: rgba(255, 71, 87, 0.95); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s, background 0.2s; z-index: 10;" title="Delete News">
+                        <button class="delete-news-btn" 
+                                data-id="<?php echo (int)$n['news_id']; ?>" 
+                                style="position: absolute; top: 10px; right: 10px; background: rgba(255, 71, 87, 0.95); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s, background 0.2s; z-index: 10;" 
+                                title="Delete News">
                             <i class="fa-solid fa-trash" style="font-size: 13px; color: white !important;"></i>
                         </button>
                     <?php endif; ?>
 
-                    <img src="<?php echo $n['image_path'] ? $n['image_path'] : 'uploads/news/default.jpg'; ?>" alt="News">
-                    <h4 class="dynamic-title"><?php echo htmlspecialchars($n['title']); ?></h4>
+                    <img src="<?php echo !empty($n['image_path']) ? htmlspecialchars($n['image_path']) : 'uploads/news/default.jpg'; ?>" alt="News">
+
+                    <h4 class="dynamic-title">
+                        <?php echo htmlspecialchars($n['title']); ?>
+                    </h4>
+
                     <button class="btn-read open-news-btn" 
                             data-title="<?php echo htmlspecialchars($n['title']); ?>" 
                             data-content="<?php echo htmlspecialchars($n['content']); ?>">
@@ -104,21 +120,29 @@ $(document).ready(function() {
         $('.dynamic-title').each(function() {
             let el = $(this);
             let fontSize = parseInt(el.css('font-size'));
+
             while (this.scrollHeight > this.clientHeight && fontSize > 11) {
                 fontSize--;
                 el.css('font-size', fontSize + 'px');
             }
         });
     }
+
     adjustFontSize();
 
     let step = 0;
+
     setInterval(function() {
         const track = $('#news-track');
         const cards = $('.news-card');
+
         if(cards.length > 4) {
             step++;
-            if(step > cards.length - 4) step = 0;
+
+            if(step > cards.length - 4) {
+                step = 0;
+            }
+
             track.css('transform', `translateX(-${step * 305}px)`);
         }
     }, 10000);
@@ -129,10 +153,13 @@ $(document).ready(function() {
         $('#newsModal').fadeIn(300);
     });
 
-    window.closeModal = function() { $('#newsModal').fadeOut(300); }
+    window.closeModal = function() { 
+        $('#newsModal').fadeOut(300); 
+    }
 
     window.closeModalOutside = function(event) {
         const modal = document.getElementById('newsModal');
+
         if (event.target === modal) {
             $('#newsModal').fadeOut(300);
         }
@@ -140,6 +167,7 @@ $(document).ready(function() {
 
     $('#news-form').on('submit', function(e) {
         e.preventDefault();
+
         $.ajax({
             url: 'ajax/create_news.php',
             type: 'POST',
@@ -160,6 +188,7 @@ $(document).ready(function() {
 
     $(document).on('click', '.delete-news-btn', function(e) {
         e.preventDefault();
+
         const newsId = $(this).data('id');
         const card = $(this).closest('.news-card');
 
